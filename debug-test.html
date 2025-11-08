@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Transcriber Debug</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Video Transcriber Debug Tool</h1>
+    
+    <h2>1. Check localStorage</h2>
+    <button onclick="checkLocalStorage()">Check API Key in localStorage</button>
+    <pre id="localStorageResult"></pre>
+    
+    <h2>2. Set API Key</h2>
+    <input type="text" id="apiKeyInput" value="yourtranscribetestbucketvideotranscriberv100" style="width: 400px;">
+    <button onclick="setApiKey()">Set API Key</button>
+    
+    <h2>3. Test API Call</h2>
+    <button onclick="testAPI()">Test API Call to /videos</button>
+    <pre id="apiResult"></pre>
+    
+    <h2>4. Check site_config.json</h2>
+    <button onclick="checkConfig()">Load site_config.json</button>
+    <pre id="configResult"></pre>
+    
+    <h2>5. Open Console</h2>
+    <p>Press F12 to open browser console and check for errors</p>
+    
+    <script>
+        const CLOUDFRONT_URL = 'https://decej2nwnffvz.cloudfront.net';
+        const API_BASE = 'https://917mle40yh.execute-api.us-east-1.amazonaws.com/prod';
+        
+        function checkLocalStorage() {
+            const apiKey = localStorage.getItem('apiKey');
+            document.getElementById('localStorageResult').textContent = 
+                'API Key in localStorage: ' + (apiKey || 'NOT SET');
+        }
+        
+        function setApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value;
+            localStorage.setItem('apiKey', apiKey);
+            alert('API Key set to: ' + apiKey);
+            checkLocalStorage();
+        }
+        
+        async function testAPI() {
+            const apiKey = localStorage.getItem('apiKey');
+            if (!apiKey) {
+                alert('Please set API Key first!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/videos', {
+                    headers: {
+                        'X-Api-Key': apiKey
+                    }
+                });
+                
+                const data = await response.json();
+                document.getElementById('apiResult').textContent = 
+                    'Status: ' + response.status + '\n' +
+                    'Response: ' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('apiResult').textContent = 
+                    'Error: ' + error.message;
+            }
+        }
+        
+        async function checkConfig() {
+            try {
+                const response = await fetch(CLOUDFRONT_URL + '/site_config.json');
+                const data = await response.json();
+                document.getElementById('configResult').textContent = 
+                    JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('configResult').textContent = 
+                    'Error: ' + error.message;
+            }
+        }
+        
+        // Auto-check on load
+        window.onload = function() {
+            checkLocalStorage();
+        };
+    </script>
+</body>
+</html>
